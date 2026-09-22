@@ -89,13 +89,13 @@ quantum computing
 Clone the repository:
 
 ```powershell
-git clone https://github.com/YOURUSERNAME/TerminalBrowser.git
+git clone https://github.com/thesuryash/TerminalBrowser.git
 ```
 
 Enter the directory:
 
 ```powershell
-cd TerminalBrowser
+cd terminal-shortcut-main
 ```
 
 Run the installer:
