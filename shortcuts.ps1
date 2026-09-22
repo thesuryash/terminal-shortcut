@@ -1,7 +1,61 @@
 $script:TerminalBrowserRoot = $PSScriptRoot
 $script:ShortcutConfig = Join-Path $PSScriptRoot "shortcuts.json"
 
+# --------------------------------------------------
+# Platform detection
+# --------------------------------------------------
+
+$script:TBIsWindows = $false
+$script:TBIsMacOS   = $false
+$script:TBIsLinux   = $false
+
+if ($PSVersionTable.PSEdition -eq "Desktop") {
+    # Windows PowerShell 5.1
+    $script:TBIsWindows = $true
+}
+else {
+    # PowerShell 6/7+
+    $script:TBIsWindows = $IsWindows
+    $script:TBIsMacOS   = $IsMacOS
+    $script:TBIsLinux   = $IsLinux
+}
+
+
+# --------------------------------------------------
+# Open URL in default browser
+# --------------------------------------------------
+
+function Open-TerminalBrowserUrl {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Url
+    )
+
+    if ($script:TBIsWindows) {
+        Start-Process $Url
+    }
+    elseif ($script:TBIsMacOS) {
+        & open $Url
+    }
+    elseif ($script:TBIsLinux) {
+        & xdg-open $Url
+    }
+    else {
+        Write-Error "Unsupported operating system."
+    }
+}
+
+
+# --------------------------------------------------
+# Import shortcuts.json
+# --------------------------------------------------
+
 function Import-TerminalShortcuts {
+
+    if (!(Test-Path $script:ShortcutConfig)) {
+        Write-Error "Shortcut config not found: $script:ShortcutConfig"
+        return
+    }
 
     $config = Get-Content $script:ShortcutConfig -Raw |
         ConvertFrom-Json
@@ -23,13 +77,13 @@ function Import-TerminalShortcuts {
                 )
 
                 if ($Query.Count -eq 0) {
-                    Start-Process $defaultUrl
+                    Open-TerminalBrowserUrl $defaultUrl
                 }
                 else {
                     $queryText = [uri]::EscapeDataString(($Query -join " "))
                     $finalUrl = $searchUrl.Replace("{query}", $queryText)
 
-                    Start-Process $finalUrl
+                    Open-TerminalBrowserUrl $finalUrl
                 }
             }.GetNewClosure()
 
@@ -39,7 +93,7 @@ function Import-TerminalShortcuts {
             $url = $shortcut.url
 
             $functionBody = {
-                Start-Process $url
+                Open-TerminalBrowserUrl $url
             }.GetNewClosure()
         }
 
@@ -47,24 +101,43 @@ function Import-TerminalShortcuts {
     }
 }
 
+
+# --------------------------------------------------
+# Edit shortcuts.json
+# --------------------------------------------------
+
 function configshortcuts {
 
     if (Get-Command code -ErrorAction SilentlyContinue) {
-        code $script:ShortcutConfig
+        & code $script:ShortcutConfig
     }
     elseif (Get-Command nano -ErrorAction SilentlyContinue) {
-        nano $script:ShortcutConfig
+        & nano $script:ShortcutConfig
+    }
+    elseif ($script:TBIsWindows) {
+        & notepad $script:ShortcutConfig
+    }
+    elseif ($script:TBIsMacOS) {
+        & open -e $script:ShortcutConfig
+    }
+    elseif ($script:TBIsLinux) {
+        & xdg-open $script:ShortcutConfig
     }
     else {
-        notepad $script:ShortcutConfig
+        Write-Error "No supported editor found."
     }
 }
 
+
+# --------------------------------------------------
+# Reload
+# --------------------------------------------------
 
 function reloadshortcuts {
     Import-TerminalShortcuts
-    Write-Host "Terminal shortcuts reloaded."
+    Write-Host "TerminalBrowser shortcuts reloaded."
 }
 
 
+# Load shortcuts automatically
 Import-TerminalShortcuts
