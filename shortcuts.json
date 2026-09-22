@@ -1,0 +1,23 @@
+{
+  "linkedin": {
+    "url": "https://www.linkedin.com/in/thesuryash"
+  },
+  "github": {
+    "url": "https://github.com/thesuryash"
+  },
+  "chatgpt": {
+    "url": "https://chatgpt.com/"
+  },
+  "gmail": {
+    "url": "https://mail.google.com/"
+  },
+  "google": {
+    "type": "search",
+    "url": "https://www.google.com/search?q={query}",
+    "default": "https://www.google.com/"
+  },
+  "suryash": {
+    "url": "https://suryash.com/"
+  }
+
+}
